@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Bus Tracking</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<style>
+html,body,#map{
+height:100%;
+margin:0;
+}
+
+#info{
+position:absolute;
+bottom:10px;
+left:10px;
+background:white;
+padding:12px;
+border-radius:8px;
+font-weight:bold;
+z-index:1000;
+line-height:1.4;
+box-shadow:0 0 10px rgba(0,0,0,0.3);
+}
+</style>
+
+</head>
+
+<body>
+
+<div id="map"></div>
+<div id="info">Loading Route...</div>
+
+<script>
+
+// ---------------- Location ----------------
+const maddiLat = 17.691064;
+const maddiLng = 75.914957;
+
+const collegeLat = 17.6799;
+const collegeLng = 75.9209;
+
+// ---------------- Map ----------------
+var map = L.map('map').setView([maddiLat,maddiLng],15);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+attribution:'© OpenStreetMap'
+}).addTo(map);
+
+// Static markers
+L.marker([maddiLat,maddiLng]).addTo(map).bindPopup("Maddi Wasti");
+L.marker([collegeLat,collegeLng]).addTo(map).bindPopup("College");
+
+// ---------------- Bus Icon ----------------
+const busIcon = L.divIcon({
+html:"🚌",
+className:"",
+iconSize:[40,40],
+iconAnchor:[20,20]
+});
+
+let busMarker = L.marker([maddiLat,maddiLng],{icon:busIcon}).addTo(map);
+
+// ---------------- Blue Route ----------------
+fetch("https://api.openrouteservice.org/v2/directions/driving-car/geojson",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json",
+"Authorization":"eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjgxNWYyN2I4N2M3YjQ5MjQ5MzI2YmQ5MjAwZGVkMDU0IiwiaCI6Im11cm11cjY0In0="
+},
+
+body:JSON.stringify({
+coordinates:[
+[maddiLng,maddiLat],
+[collegeLng,collegeLat]
+]
+})
+
+})
+
+.then(res=>res.json())
+.then(data=>{
+
+if(data.features){
+
+L.geoJSON(data,{
+style:{color:"blue",weight:6}
+}).addTo(map);
+
+document.getElementById("info").innerHTML="Route Loaded ✅";
+
+}
+
+});
+
+// ---------------- Red Path ----------------
+let pathCoordinates = [];
+let redPath = L.polyline(pathCoordinates,{color:"red",weight:5}).addTo(map);
+
+// ---------------- Stop Detection ----------------
+let lastLat=null;
+let lastLng=null;
+let stopCounter=0;
+let stopMarker=null;
+let busStopped=false;
+
+// ---------------- Smooth Move ----------------
+function smoothMove(newLat,newLng){
+
+const current = busMarker.getLatLng();
+
+const steps=20;
+let i=0;
+
+const latStep=(newLat-current.lat)/steps;
+const lngStep=(newLng-current.lng)/steps;
+
+const interval=setInterval(()=>{
+
+if(i>=steps){
+clearInterval(interval);
+return;
+}
+
+busMarker.setLatLng([
+current.lat + latStep*i,
+current.lng + lngStep*i
+]);
+
+i++;
+
+},50);
+
+}
+
+// ---------------- Distance ----------------
+function haversine(lat1,lng1,lat2,lng2){
+
+const R=6371;
+
+const dLat=(lat2-lat1)*Math.PI/180;
+const dLng=(lng2-lng1)*Math.PI/180;
+
+const a=
+Math.sin(dLat/2)*Math.sin(dLat/2)+
+Math.cos(lat1*Math.PI/180)*
+Math.cos(lat2*Math.PI/180)*
+Math.sin(dLng/2)*Math.sin(dLng/2);
+
+const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+
+return R*c;
+
+}
+
+// ---------------- Get Place Name ----------------
+async function getPlaceName(lat,lng){
+
+try{
+
+const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+
+const data = await res.json();
+
+return data.display_name;
+
+}catch(e){
+
+return "Bus Stop";
+
+}
+
+}
+
+// ---------------- Driver JSON ----------------
+const BUS_JSON="locations/1.json";
+const AVG_SPEED=40;
+
+// ---------------- Live Update ----------------
+setInterval(()=>{
+
+fetch(BUS_JSON+"?t="+new Date().getTime())
+
+.then(res=>res.json())
+
+.then(async data=>{
+
+const lat=parseFloat(data.lat);
+const lng=parseFloat(data.lng);
+
+if(!isNaN(lat) && !isNaN(lng)){
+
+// move bus
+smoothMove(lat,lng);
+
+// detect stop
+if(lastLat!=null){
+
+const dist=haversine(lat,lng,lastLat,lastLng);
+
+if(dist < 0.003){
+
+stopCounter++;
+
+}else{
+
+stopCounter=0;
+
+if(busStopped){
+busStopped=false;
+}
+
+}
+
+// bus stopped
+if(stopCounter>=4 && !busStopped){
+
+busStopped=true;
+
+const place=await getPlaceName(lat,lng);
+
+if(stopMarker){
+map.removeLayer(stopMarker);
+}
+
+stopMarker=L.marker([lat,lng]).addTo(map)
+.bindPopup("🛑 Bus Stopped At<br>"+place)
+.openPopup();
+
+}
+
+}
+
+// draw red path only if moving
+if(!busStopped){
+
+pathCoordinates.push([lat,lng]);
+redPath.setLatLngs(pathCoordinates);
+
+}
+
+// distance & eta
+const dist=haversine(lat,lng,collegeLat,collegeLng);
+
+const eta=Math.ceil(dist/AVG_SPEED*60);
+
+document.getElementById("info").innerHTML=`
+Bus Moving Live 🚌<br>
+Remaining Distance: ${dist.toFixed(2)} km<br>
+ETA: ${eta} min<br>
+Last Update: ${data.timestamp}
+`;
+
+lastLat=lat;
+lastLng=lng;
+
+}
+
+})
+
+.catch(err=>{
+
+document.getElementById("info").innerHTML="Waiting for Driver...";
+
+});
+
+},2000);
+
+</script>
+
+</body>
+</html>

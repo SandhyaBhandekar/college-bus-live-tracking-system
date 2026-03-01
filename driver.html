@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Driver Live Tracking</title>
+</head>
+<body style="text-align:center;margin-top:50px;font-family:Arial;">
+
+<h2>Driver Live Tracking</h2>
+
+<button onclick="startTracking()">Start Tracking</button>
+<button onclick="stopTracking()">Stop Tracking</button>
+
+<p id="status">Tracking not started</p>
+
+<script>
+
+let watchId = null;
+const busId = "1";
+
+function startTracking(){
+
+    watchId = navigator.geolocation.watchPosition(
+
+        function(position){
+
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+            document.getElementById("status").innerHTML =
+            "Tracking Active<br>Lat: "+lat+"<br>Lng: "+lng;
+
+            
+            fetch("update-location.php", {
+                method:"POST",
+                headers:{"Content-Type":"application/json"},
+                body:JSON.stringify({
+                    bus_id: busId,
+                    lat: lat,
+                    lng: lng,
+                    timestamp: new Date().toISOString()
+                })
+            });
+
+        },
+
+        function(error){
+            document.getElementById("status").innerText =
+            "Error: "+error.message;
+        },
+
+        {
+            enableHighAccuracy:true,
+            maximumAge:0,
+            timeout:5000
+        }
+    );
+}
+
+function stopTracking(){
+    navigator.geolocation.clearWatch(watchId);
+    document.getElementById("status").innerText = "Tracking Stopped";
+}
+
+</script>
+
+</body>
+</html>
