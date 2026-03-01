@@ -1,17 +1,34 @@
 # College Bus Live Tracking System
 
-## Project Overview
-The College Bus Live Tracking System is a web-based application that allows students to track the real-time location of the college bus.
+## 📌 Project Overview
 
-The system uses GPS coordinates (latitude and longitude) to display the bus location on an interactive map. The map interface is created using Leaflet.js, which is an open-source JavaScript library for building interactive maps.
+The College Bus Live Tracking System is a web-based application that allows students to track the real-time location of their college bus. The system uses GPS coordinates from the driver's mobile device and displays the location on an interactive map.
 
-OpenStreetMap is used as the map provider because it is free and open-source. This allows the system to display map data without using paid APIs like Google Maps.
+This project uses **Leaflet.js** with **OpenStreetMap** to display the map, which is completely free and open-source. Unlike Google Maps, this system does not require any paid APIs.
 
-In this project, the bus location is tracked using the driver's mobile device. The driver’s mobile phone provides GPS coordinates which are used to update the bus location on the map in real time.
+The main purpose of this project is to help students know the current location of the bus and reduce waiting time at bus stops.
 
 ---
 
-## Technologies Used
+## 🎯 Objective
+
+The objective of this project is to develop a simple and efficient bus tracking system that allows students to track the live location of the college bus using open-source technologies.
+
+---
+
+## 🚀 Features
+
+- Real-time bus location tracking
+- Interactive map using Leaflet.js
+- Free map services using OpenStreetMap
+- GPS location sharing from driver’s mobile device
+- Web-based interface accessible from any browser
+- Lightweight and easy to use system
+
+---
+
+## 🛠 Technologies Used
+
 - HTML
 - CSS
 - JavaScript
@@ -21,44 +38,74 @@ In this project, the bus location is tracked using the driver's mobile device. T
 
 ---
 
-## Features
-- Real-time bus location tracking
-- Interactive map display
-- GPS based location updates
-- Bus location marker on map
-- Simple and user-friendly interface
-- Free map integration using OpenStreetMap
+## 🗂 Project Structure
+college-bus-live-tracking-system/
+│
+├── index.html (Student Map Interface)
+├── driver.html (Driver Location Sharing Page)
+├── README.md
+
 
 ---
 
-## How the System Works
-1. The driver opens the tracking system on the mobile device.
-2. The mobile phone GPS detects the current bus location.
-3. The system collects GPS coordinates (latitude and longitude).
-4. These coordinates are sent to the web application.
-5. Leaflet.js displays the location on the map.
-6. OpenStreetMap provides the map tiles.
-7. The bus location is shown using a marker that updates in real time.
+## ⚙️ How the System Works
+
+1. The **driver opens driver.html** on their mobile phone.
+2. The browser requests **GPS location permission**.
+3. The driver's mobile device provides **latitude and longitude coordinates**.
+4. These coordinates are used to update the bus position.
+5. Students open the **student page (index.html)** to see the bus location on the map.
 
 ---
 
-## Advantages
-- Students can track the bus easily.
-- Reduces waiting time at bus stops.
-- Uses free and open-source technologies.
-- No need for extra GPS hardware device.
-- Easy to implement and maintain.
+## 🌐 Live Demo
+
+Student Page  
+https://sandhyabhandekar.github.io/college-bus-live-tracking-system/
+
+Driver Page  
+https://sandhyabhandekar.github.io/college-bus-live-tracking-system/driver.html
 
 ---
 
-## Future Improvements
-- Mobile application support
-- Multiple bus tracking
-- Bus arrival time prediction
-- Notification system for students
-- Admin dashboard for bus management
+## 🧭 System Architecture
+Driver Mobile GPS
+↓
+Driver Web Page
+↓
+Location Coordinates
+↓
+Leaflet Map Update
+↓
+Student Web Interface
+
+
 
 ---
 
-## Author
-Sandhya Bhandekar
+## 🔮 Future Improvements
+
+- Develop a dedicated **Android mobile application for the driver**
+- Integrate **Firebase Realtime Database for live tracking**
+- Support **multiple buses tracking**
+- Add **bus route information**
+- Implement **driver authentication system**
+- Improve **real-time update accuracy**
+
+---
+
+## 📚 Advantages
+
+- Completely free and open-source
+- No paid APIs required
+- Easy to deploy using GitHub Pages
+- Works on any device with internet access
+- Simple and lightweight system
+
+---
+
+## 🎓 Conclusion
+
+The College Bus Live Tracking System provides a simple and effective solution for tracking college buses in real-time. By using open-source technologies like Leaflet.js and OpenStreetMap, the system eliminates the need for paid map services while still providing accurate and interactive tracking.
+
+This project demonstrates how GPS-based tracking systems can be implemented using modern web technologies.
